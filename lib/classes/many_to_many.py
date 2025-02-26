@@ -21,7 +21,7 @@ class Article:
         self._title = title
         
 
-    @property
+    @property #object property
     def author(self):
         return self._author
 
@@ -31,7 +31,7 @@ class Article:
             raise ValueError("Author must be of type Author")
         self._author = author
 
-    @property
+    @property #object property
     def magazine(self):
         return self._magazine
 
@@ -60,19 +60,19 @@ class Author:
             raise ValueError("Name can't be changed after author is instantiated")
         self._name = name
 
-    def articles(self):
+    def articles(self): #object relationship & property
         return [article for article in Article.all if article.author == self]
     pass
 
-    def magazines(self):
+    def magazines(self):  #object relationship & property
         return list(set(article.magazine for article in self.articles()))
     pass
 
-    def add_article(self, magazine, title):
+    def add_article(self, magazine, title): #Aggregate & Association method
         return Article(self, magazine, title)
     pass
 
-    def topic_areas(self):
+    def topic_areas(self): #Aggregate & Association method
         if not self.articles():
             return None
         return list(set(article.magazine.category for article in self.articles()))
@@ -107,31 +107,31 @@ class Magazine:
             raise ValueError("Category must be longer than 0 characters")
         self._category = category
 
-    def articles(self):
+    def articles(self):  #object relationship & property
         return [article for article in Article.all if article.magazine == self]
     pass
 
-    def contributors(self):
+    def contributors(self):  #object relationship & property
         return list(set(article.author for article in self.articles()))
     pass
 
-    def article_titles(self):
+    def article_titles(self): #Aggregate & Association method
         if not self.articles():
             return None
         return [article.title for article in self.articles()]
     pass
 
-    def contributing_authors(self):
+    def contributing_authors(self): #Aggregate & Association method
         authors = [article.author for article in self.articles()]
         return [author for author in set(authors) if authors.count(author) > 2] or None 
     pass
 
 
-author1 = Author("John Doe")
-author2 = Author("Jane Smith")
+author1 = Author("Carry Bradshaw")
+author2 = Author("Nathaniel Hawthorne")
 
-magazine1 = Magazine("Tech Weekly", "Technology")
-magazine2 = Magazine("Science Today", "Science")
+magazine1 = Magazine("AD", "Architecture")
+magazine2 = Magazine("Vogue", "Fashion")
 
 article1 = author1.add_article(magazine1, "Python Basics")
 article2 = author1.add_article(magazine2, "AI in 2023")
