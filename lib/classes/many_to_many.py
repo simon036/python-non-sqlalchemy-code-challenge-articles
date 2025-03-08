@@ -1,146 +1,144 @@
 class Article:
-    all= []
+    all=[] # Store all article instances
+
     def __init__(self, author, magazine, title):
+        # Ensuring the author and magazine are instances
+        if not isinstance(author, Author):
+            raise Exception("Author article must be an instance of Author")
+        if not isinstance(magazine, Magazine):
+            raise Exception("Article magazine must be an instance of Magazine")
+
         self.author = author
         self.magazine = magazine
         self.title = title
+        
         Article.all.append(self)
 
-    @property
+        # Establish many-to-many relationship by adding the article to the author and magazine
+        self.magazine._authors.add(self.author)
+        self.magazine._articles.append(self)
+        
+        self.author._magazines.add(self.magazine)
+        self.author._articles.append(self)
+
+    @property #getter for title
     def title(self):
         return self._title
-
+    
     @title.setter
     def title(self, title):
-        if not isinstance(title, str):
-            raise ValueError("The title must be a string")
-        if not (5 <= len(title) <= 50):
-            raise ValueError("The title must be between 5 % 50 characters")
         if hasattr(self, "_title"):
-            raise ValueError("Title cannot be changed after instantiation")
-        self._title = title
-        
-
-    @property #object property
-    def author(self):
-        return self._author
-
-    @author.setter
-    def author(self, author):
-        if not isinstance(author, Author):
-            raise ValueError("Author must be of type Author")
-        self._author = author
-
-    @property #object property
-    def magazine(self):
-        return self._magazine
-
-    @magazine.setter
-    def magazine(self, magazine):
-        if not isinstance(magazine, Magazine):
-            raise ValueError("Magazine must be of type Magazine")
-        self._magazine = magazine
-
+            raise Exception("Cannot change the title of the article")
+        elif isinstance(title, str) and 5 < len(title) < 50:
+            self._title = title
+        else:
+            raise Exception("Title must be a string and have characters between 5-50")
 
 class Author:
     def __init__(self, name):
         self.name = name
+        self._articles =[]
+        self._magazines =set()
 
-    @property
-    def name(self):
+    
+    @property #getter method for author's name
+    def name (self):
         return self._name
+    
+    @name.setter #setter method
+    def name(self,name):
+        if hasattr(self, "_name"):  #ensures authors name is not changed
+            raise Exception ("You cannot be able to change the name of the author after is instantiated")
+        elif isinstance(name, str) and len(name) > 0: #ensures the name is a str and of more than 0 char
+            self._name= name
+        else:
+            raise Exception ("author's name should be longer than 0 characters")
 
-    @name.setter
-    def name(self, name):
-        if not isinstance(name, str):
-            raise ValueError("Name must be a string")
-        if len(name) == 0:
-            raise ValueError("Name must be longer than 0 characters")
-        if hasattr(self, "_name"):
-            raise ValueError("Name can't be changed after author is instantiated")
-        self._name = name
 
-    def articles(self): #object relationship & property
-        return [article for article in Article.all if article.author == self]
+
+    def articles(self): #return list of articles the author has written
+        return self._articles
     pass
 
-    def magazines(self):  #object relationship & property
-        return list(set(article.magazine for article in self.articles()))
+    def magazines(self): #returns unique list of magazine contributed
+        return list(self._magazines)
     pass
 
-    def add_article(self, magazine, title): #Aggregate & Association method
+    def add_article(self, magazine, title): 
+        if not isinstance(magazine, Magazine): # magazine is an instance
+            raise Exception ("Magazine must be an instance of magazine")
         return Article(self, magazine, title)
+    
     pass
 
-    def topic_areas(self): #Aggregate & Association method
-        if not self.articles():
-            return None
-        return list(set(article.magazine.category for article in self.articles()))
+    def topic_areas(self):
+        if not self._articles:
+            return None #returns none if author has no article
+        
+        return list(set(magazine.category for magazine in self._magazines))  #returns a unique list
     pass
+
+    def _repr_(self):
+        # Return a string representation of the author
+        return f"Author({self.name})"
+    pass
+
 
 class Magazine:
     def __init__(self, name, category):
         self.name = name
         self.category = category
+        self._articles =[]
+        self._authors=set()
+        
 
-    @property
+    @property #getter method for magazine's name
     def name(self):
         return self._name
-
-    @name.setter
-    def name(self, name):
-        if not isinstance(name, str):
-            raise ValueError("Name must be a string")
-        if not (2 <= len(name) <= 16):
-            raise ValueError("Name must be between 2 and 16 characters")
-        self._name = name
-
-    @property
+    
+    @name.setter #setter method
+    def name (self,name):
+        if isinstance(name , str) and 2 <= len(name) <= 16:
+            self._name =name
+        else:
+            raise Exception ("Magazine's name should be between 2-16 characters")
+        
+    
+    @property #getter method for category
     def category(self):
-        return self._category
-
+        return self._category 
+    
     @category.setter
-    def category(self, category):
-        if not isinstance(category, str):
-            raise ValueError("Category must be a string")
-        if len(category) == 0:
-            raise ValueError("Category must be longer than 0 characters")
-        self._category = category
+    def category (self, category):
+        if isinstance(category ,str) and len(category) > 0:
+            self._category=category
+        else:
+            raise Exception ("magazine category must be a str and greater than 0")
 
-    def articles(self):  #object relationship & property
-        return [article for article in Article.all if article.magazine == self]
+    def articles(self): #list of all articles magazine has published
+        return self._articles
     pass
 
-    def contributors(self):  #object relationship & property
-        return list(set(article.author for article in self.articles()))
+    def contributors(self): #returns a unique list of authors who have written for this magazine
+        return list(self._authors)
     pass
 
-    def article_titles(self): #Aggregate & Association method
-        if not self.articles():
+    def article_titles(self):
+        if not self._articles: #return none if there are no articles
             return None
-        return [article.title for article in self.articles()]
+        
+        return [article.title for article in self._articles] #Returns a list of the titles strings of all articles written for that magazine
     pass
 
-    def contributing_authors(self): #Aggregate & Association method
-        authors = [article.author for article in self.articles()]
-        return [author for author in set(authors) if authors.count(author) > 2] or None 
+    def contributing_authors(self):
+        author_count={}  #creating a dictionary to store the count
+
+        for article in self._articles:
+            if article.author in author_count:
+                author_count[article.author] +=1
+            else:
+                author_count[article.author]=1
+
+        frequent_authors =[author for author, count in author_count.items() if count >2]
+        return frequent_authors if frequent_authors else None
     pass
-
-
-author1 = Author("Carry Bradshaw")
-author2 = Author("Nathaniel Hawthorne")
-
-magazine1 = Magazine("AD", "Architecture")
-magazine2 = Magazine("Vogue", "Fashion")
-
-article1 = author1.add_article(magazine1, "Python Basics")
-article2 = author1.add_article(magazine2, "AI in 2023")
-article3 = author2.add_article(magazine1, "Advanced Python")
-
-print(author1.articles())
-print(author1.magazines())
-print(magazine1.articles())
-print(magazine1.contributors())
-print(author1.topic_areas())
-print(magazine1.article_titles())
-print(magazine1.contributing_authors())
